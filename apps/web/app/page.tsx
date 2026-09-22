@@ -1,10 +1,15 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
-    <main style={{ maxWidth: 960, margin: "0 auto", padding: 48, fontFamily: "system-ui" }}>
-      <p>LEVELUPOS</p>
-      <h1>Turn your goals into quests.</h1>
-      <p>AI-powered productivity, real-life XP, and a skill tree that grows with you.</p>
-      <p>Phase 1 foundation is ready. QuestFlow and the dashboard are coming next.</p>
+    <main className="shell">
+      <header className="topbar"><div className="brand">LEVELUPOS</div><Link className="button" href="/dashboard">Open dashboard</Link></header>
+      <section className="content" style={{ maxWidth: 980, margin: "0 auto", paddingTop: 110 }}>
+        <div className="eyebrow">Life RPG · QuestFlow · Skill Tree</div>
+        <h1 style={{ fontSize: "clamp(42px, 8vw, 84px)", maxWidth: 850 }}>Turn your real life into a game worth playing.</h1>
+        <p className="muted" style={{ fontSize: 19, lineHeight: 1.7, maxWidth: 680, marginTop: 22 }}>Capture goals, complete quests, earn XP, and build skills that reflect who you are becoming.</p>
+        <Link className="button" style={{ display: "inline-block", marginTop: 24, textDecoration: "none" }} href="/dashboard">Start your adventure →</Link>
+      </section>
     </main>
   );
 }
