@@ -17,6 +17,15 @@ export type Quest = {
   updated_at: string;
 };
 
+export type SkillProgress = {
+  id: string;
+  user_id: string;
+  skill_id: string;
+  level: number;
+  xp: number;
+  skills: { slug: string; name: string; description: string | null; icon: string | null; color: string | null };
+};
+
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function request<T>(token: string, path: string, init?: RequestInit): Promise<T> {
@@ -29,3 +38,4 @@ async function request<T>(token: string, path: string, init?: RequestInit): Prom
 export function listQuests(token: string) { return request<Quest[]>(token, "/api/v1/quests"); }
 export function createQuest(token: string, payload: Partial<Quest>) { return request<Quest>(token, "/api/v1/quests", { method: "POST", body: JSON.stringify(payload) }); }
 export function completeQuest(token: string, id: string) { return request<{ quest: Quest; xp_awarded: number; level: number; total_xp: number }>(token, `/api/v1/quests/${id}/complete`, { method: "POST" }); }
+export function getSkillProgress(token: string) { return request<SkillProgress[]>(token, "/api/v1/skills/progress"); }
