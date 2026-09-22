@@ -13,6 +13,20 @@ def parse_rows(response) -> list[dict]:
         raise HTTPException(status_code=response.status_code, detail=response.text)
     return response.json() if response.content else []
 
+async def resolve_skill_links(skill_slugs: list[str], user_id: UUID, token: str) -> list[dict]:
+    if not skill_slugs:
+        return []
+    response = await supabase_request("GET", "/skills", user_id, params={"slug": f"in.({','.join(skill_slugs)})", "select": "id,slug"}, token=token)
+    skills = parse_rows(response)
+    return [{"skill_id": skill["id"], "xp_reward": 25} for skill in skills]
+
+async def insert_skill_links(quest_id: str, links: list[dict], user_id: UUID, token: str) -> None:
+    if not links:
+        return
+    response = await supabase_request("POST", "/quest_skills", user_id, json=[{"quest_id": quest_id, **link} for link in links], token=token)
+    if response.status_code >= 400:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
+
 @router.get("", response_model=list[QuestResponse])
 async def list_quests(user_id: UserId, token: Token, quest_status: str | None = Query(default=None, alias="status"), scheduled_date: str | None = None):
     params = {"user_id": f"eq.{user_id}", "select": "*", "order": "created_at.desc"}
@@ -22,9 +36,12 @@ async def list_quests(user_id: UserId, token: Token, quest_status: str | None = 
 
 @router.post("", response_model=QuestResponse, status_code=status.HTTP_201_CREATED)
 async def create_quest(payload: QuestCreate, user_id: UserId, token: Token):
-    response = await supabase_request("POST", "/quests", user_id, json={**payload.model_dump(mode="json"), "user_id": str(user_id)}, params={"select": "*"}, headers={"Prefer": "return=representation"}, token=token)
+    data = payload.model_dump(mode="json")
+    skill_slugs = data.pop("skill_slugs", [])
+    response = await supabase_request("POST", "/quests", user_id, json={**data, "user_id": str(user_id)}, params={"select": "*"}, headers={"Prefer": "return=representation"}, token=token)
     rows = parse_rows(response)
     if not rows: raise HTTPException(status_code=500, detail="Quest was not returned")
+    await insert_skill_links(str(rows[0]["id"]), await resolve_skill_links(skill_slugs, user_id, token), user_id, token)
     return rows[0]
 
 @router.patch("/{quest_id}", response_model=QuestResponse)

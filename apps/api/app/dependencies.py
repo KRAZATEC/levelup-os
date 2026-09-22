@@ -9,6 +9,7 @@ async def get_current_user_id(authorization: Annotated[str | None, Header()] = N
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bearer token required")
     token = authorization.split(" ", 1)[1].strip()
+    settings = get_settings()
     try:
         payload = jwt.decode(token, options={"verify_signature": False, "verify_exp": True})
         user_id = payload.get("sub")
